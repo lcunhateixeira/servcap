@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import PhotoUploader from "./photo-uploader";
+import { formatDateBR } from "@/lib/formatters/date";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -164,7 +165,7 @@ export default async function AdminPeoplePage({
             {(people ?? []).map((p) => (
               <tr key={p.id} className="border-b align-top">
                 <td className="p-3">{p.full_name}</td>
-                <td className="p-3">{p.birth_date}</td>
+                <td className="p-3">{formatDateBR(p.birth_date)}</td>
                 <td className="p-3">
                   <PhotoUploader personId={p.id} currentPhotoUrl={p.photo_url} />
                 </td>
@@ -185,18 +186,16 @@ export default async function AdminPeoplePage({
       {/* Paginação */}
       <div className="flex items-center justify-between">
         <Link
-          className={`border rounded px-3 py-2 ${
-            currentPage === 1 ? "pointer-events-none opacity-50" : ""
-          }`}
+          className={`border rounded px-3 py-2 ${currentPage === 1 ? "pointer-events-none opacity-50" : ""
+            }`}
           href={prevHref}
         >
           ← Anterior
         </Link>
 
         <Link
-          className={`border rounded px-3 py-2 ${
-            currentPage === totalPages ? "pointer-events-none opacity-50" : ""
-          }`}
+          className={`border rounded px-3 py-2 ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""
+            }`}
           href={nextHref}
         >
           Próxima →
