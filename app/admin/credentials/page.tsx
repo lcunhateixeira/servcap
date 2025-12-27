@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import CredentialActions from "./credential-actions";
+import RenderButton from "./render-button";
+
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -212,7 +214,11 @@ export default async function AdminCredentialsPage({
           <tbody>
             {(creds ?? []).map((c: any) => (
               <tr key={c.id} className="border-b align-top">
-                <td className="p-3">{c.credential_number}</td>
+                <td className="p-3">
+                  <Link className="underline" href={`/admin/credentials/${c.id}`}>
+                    {c.credential_number}
+                  </Link>
+                </td>
                 <td className="p-3">{labelKind(c.kind)}</td>
                 <td className="p-3">
                   {c.full_name}
@@ -240,6 +246,19 @@ export default async function AdminCredentialsPage({
                     abrir
                   </Link>
                 </td>
+                <td className="p-3">
+                  <RenderButton credentialId={c.id} />
+                  {c.front_image_url && (
+                    <a className="ml-2 underline text-xs" href={c.front_image_url} target="_blank">
+                      Frente
+                    </a>
+                  )}
+                  {c.back_image_url && (
+                    <a className="ml-2 underline text-xs" href={c.back_image_url} target="_blank">
+                      Verso
+                    </a>
+                  )}
+                </td>
               </tr>
             ))}
             {(!creds || creds.length === 0) && (
@@ -256,18 +275,16 @@ export default async function AdminCredentialsPage({
       {/* Paginação */}
       <div className="flex items-center justify-between">
         <Link
-          className={`border rounded px-3 py-2 ${
-            currentPage === 1 ? "pointer-events-none opacity-50" : ""
-          }`}
+          className={`border rounded px-3 py-2 ${currentPage === 1 ? "pointer-events-none opacity-50" : ""
+            }`}
           href={prevHref}
         >
           ← Anterior
         </Link>
 
         <Link
-          className={`border rounded px-3 py-2 ${
-            currentPage === totalPages ? "pointer-events-none opacity-50" : ""
-          }`}
+          className={`border rounded px-3 py-2 ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""
+            }`}
           href={nextHref}
         >
           Próxima →
