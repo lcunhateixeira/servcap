@@ -1,3 +1,5 @@
+import { formatDateBR } from "@/lib/formatters/date";
+import { formatCPF } from "@/lib/formatters/helper";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function CredentialPublicPage({
@@ -48,9 +50,10 @@ export default async function CredentialPublicPage({
           {validNow ? "✅ Credencial válida" : "❌ Credencial inválida"}
         </p>
 
-        <p><b>Nome:</b> {row.full_name}</p>
-        <p><b>Nascimento:</b> {row.birth_date}</p>
         <p><b>Número:</b> {row.credential_number}</p>
+        <p><b>Nome:</b> {row.full_name}</p>
+        <p><b>Nascimento:</b> {formatDateBR(row.birth_date)}</p>
+        <p><b>CPF:</b> {formatCPF(row.cpf)}</p>
         <p><b>Título:</b> {kindLabel}</p>
         <p>
           <b>Igreja:</b> {row.church_name}{" "}

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import PhotoUploader from "./photo-uploader";
 import { formatDateBR } from "@/lib/formatters/date";
+import { formatCPF } from "@/lib/formatters/helper";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -53,9 +54,10 @@ export default async function AdminPeoplePage({
 
   let query = supabase
     .from("people")
-    .select("id, full_name, birth_date, photo_url, created_at", {
+    .select("id, full_name, birth_date, cpf, photo_url, created_at", {
       count: "exact",
     })
+    .is("deleted_at", null)
     .order("full_name", { ascending: true });
 
   // Filtro nome
@@ -156,6 +158,7 @@ export default async function AdminPeoplePage({
         <table className="w-full text-sm">
           <thead className="border-b">
             <tr className="text-left">
+              <th className="p-3">CPF</th>
               <th className="p-3">Nome</th>
               <th className="p-3">Nascimento</th>
               <th className="p-3">Foto</th>
@@ -164,8 +167,17 @@ export default async function AdminPeoplePage({
           <tbody>
             {(people ?? []).map((p) => (
               <tr key={p.id} className="border-b align-top">
-                <td className="p-3">{p.full_name}</td>
-                <td className="p-3">{formatDateBR(p.birth_date)}</td>
+                <td className="p-3">
+                  {formatCPF(p.cpf)}
+                </td>
+                <td className="p-3">
+                  <Link className="underline" href={`/admin/people/${p.id}`}>
+                    {p.full_name}
+                  </Link>
+                </td>
+                <td className="p-3">
+                  {formatDateBR(p.birth_date)}
+                </td>
                 <td className="p-3">
                   <PhotoUploader personId={p.id} currentPhotoUrl={p.photo_url} />
                 </td>
