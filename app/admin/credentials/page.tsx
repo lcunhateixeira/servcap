@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import CredentialActions from "./credential-actions";
 import RenderButton from "./render-button";
+import { formatDateBR } from "@/lib/formatters/date";
 
 
 export const dynamic = "force-dynamic";
@@ -222,7 +223,7 @@ export default async function AdminCredentialsPage({
                 <td className="p-3">{labelKind(c.kind)}</td>
                 <td className="p-3">
                   {c.full_name}
-                  <div className="text-xs opacity-70">{c.birth_date}</div>
+                  <div className="text-xs opacity-70">{formatDateBR(c.birth_date)}</div>
                 </td>
                 <td className="p-3">
                   {c.issued_church_name}
