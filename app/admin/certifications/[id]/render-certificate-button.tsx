@@ -10,7 +10,7 @@ export default function RenderCertificateButton({ certificationId }: { certifica
   async function run() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/certifications/${certificationId}/render`, { method: "POST" });
+      const res = await fetch(`/admin/certifications/${certificationId}/render`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error ?? "Falha ao gerar certificado");
       router.refresh();

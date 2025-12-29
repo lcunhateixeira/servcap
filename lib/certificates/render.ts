@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { PDFDocument } from "pdf-lib";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDateBR } from "@/lib/formatters/date";
+import { wrapSvgText } from "../svg/wrapText";
 
 function escapeXml(s: string) {
   return (s ?? "")
@@ -65,8 +66,9 @@ export async function renderCertificateFiles(certId: string) {
   const templateBuffer = await fs.readFile(templatePath);
 
   const meta = await sharp(templateBuffer).metadata();
-  const W = meta.width ?? 1400;
+  const W = meta.width ?? 1700;
   const H = meta.height ?? 1000;
+  console.log(`Template dimensions: ${W}x${H}`);
 
   // 7) campos do certificado
   const nome = escapeXml(person.full_name ?? "");
@@ -77,40 +79,42 @@ export async function renderCertificateFiles(certId: string) {
   const cityUf = escapeXml(`${cert.city ?? "Capivari de Baixo"}-${cert.state ?? "SC"}`);
   const issuedAt = escapeXml(formatDateBR(cert.issued_at ?? null));
 
+
+  const textoPrincipal = `Certificamos que participou do curso ${curso}, realizado em ${cityUf},
+  nos dias ${datas}. Os assuntos abordados foram: ${topics}.Carga horária: ${hours} horas.`.trim();
+
+  const baseX = Math.round(W * 0.33);
+  const baseY = Math.round(H * 0.56);
+  const textoSvg = wrapSvgText(textoPrincipal, {
+    maxCharsPerLine: 68,
+    lineHeight: Math.round(H * 0.038),
+    x: baseX,
+    y: baseY,
+  });
+
   // 8) overlay SVG (ajustaremos a posição finamente depois)
   const overlaySvg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <!-- Nome -->
-    <text x="${Math.round(W * 0.54)}" y="${Math.round(H * 0.50)}"
+    <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.50)}"
       font-family="Georgia" font-size="${Math.round(H * 0.065)}"
-      fill="#111" text-anchor="middle" font-style="italic">${nome}</text>
+      fill="#111" font-style="italic">${nome}</text>
 
     <!-- Texto principal -->
-    <text x="${Math.round(W * 0.24)}" y="${Math.round(H * 0.62)}"
+    <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.56)}"
       font-family="Arial" font-size="${Math.round(H * 0.028)}" fill="#111">
-      <tspan x="${Math.round(W * 0.24)}" dy="0">Certificamos que participou do </tspan>
-      <tspan font-weight="700">${curso}</tspan>
-      <tspan> realizado em ${cityUf}, nos dias: </tspan>
-      <tspan font-weight="700">${datas}</tspan>
-      <tspan>, das 14:00 às 18:00.</tspan>
-
-      <tspan x="${Math.round(W * 0.24)}" dy="${Math.round(H * 0.038)}">Os assuntos abordados foram: </tspan>
-      <tspan font-weight="700">${topics}</tspan>
-
-      <tspan x="${Math.round(W * 0.24)}" dy="${Math.round(H * 0.038)}">Carga horária: </tspan>
-      <tspan font-weight="700">${hours}</tspan>
-      <tspan> horas.</tspan>
+      ${textoSvg}
     </text>
 
     <!-- Data de emissão -->
-    <text x="${Math.round(W * 0.80)}" y="${Math.round(H * 0.88)}"
-      font-family="Arial" font-size="${Math.round(H * 0.022)}" fill="#555" text-anchor="end">
+    <text x="${Math.round(W * 0.56)}" y="${Math.round(H * 0.15)}"
+      font-family="Arial" font-size="${Math.round(H * 0.015)}" fill="#555">
       Emitido em: ${issuedAt}
     </text>
 
     <!-- QR -->
-    <image href="${qrDataUrl}" x="${Math.round(W * 0.84)}" y="${Math.round(H * 0.66)}"
-      width="${Math.round(W * 0.11)}" height="${Math.round(W * 0.11)}" />
+    <image href="${qrDataUrl}" x="${Math.round(W * 0.58)}" y="${Math.round(H * 0.015)}"
+      width="${Math.round(W * 0.08)}" height="${Math.round(W * 0.08)}" />
   </svg>`;
 
   // 9) compor PNG final

@@ -93,9 +93,15 @@ export default async function AdminCertificationDetailPage({
 
       <section className="border rounded p-4">
         <h2 className="font-semibold mb-3">Preview</h2>
+
         {cert.png_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cert.png_url} alt="Certificado" className="w-full rounded border" />
+          <img
+            key={cert.rendered_at ?? cert.png_url}
+            src={`${cert.png_url}?v=${encodeURIComponent(cert.rendered_at ?? Date.now().toString())}`}
+            alt="Certificado"
+            className="w-full rounded border"
+          />
         ) : (
           <p className="text-sm opacity-70">Ainda não gerado.</p>
         )}
