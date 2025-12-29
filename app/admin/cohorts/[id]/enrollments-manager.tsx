@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type EnrollmentRow = {
+export type EnrollmentRow = {
     id: string;
     person_id: string;
     status: string;

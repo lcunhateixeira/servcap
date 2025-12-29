@@ -3,9 +3,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import RenderCertificatesButton from "./render-certificates-button";
 import EnrollmentsManager from "./enrollments-manager";
+import type { EnrollmentRow } from "./enrollments-manager";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
 
 export default async function AdminCohortDetailPage({
   params,
@@ -35,12 +37,12 @@ export default async function AdminCohortDetailPage({
     .eq("id", cohortId)
     .single();
 
-    // Buscar curso relacionado
-    const { data: course, error: eCourse } = await supabase
-      .from("courses")
-      .select("id, name")
-      .eq("id", cohort?.course_id)
-      .single();
+  // Buscar curso relacionado
+  const { data: course, error: eCourse } = await supabase
+    .from("courses")
+    .select("id, name")
+    .eq("id", cohort?.course_id)
+    .single();
 
   if (eCoh || !cohort) {
     return (
@@ -52,10 +54,17 @@ export default async function AdminCohortDetailPage({
     );
   }
 
-  // enrollments (sem join com certifications para não depender do schema cache)
-  const { data: enrollments, error: eEnr } = await supabase
+  const { data: rawEnrollments, error: eEnr } = await supabase
     .from("enrollments")
-    .select("id, person_id, status, created_at, people:person_id(full_name)")
+    .select(`
+    id,
+    person_id,
+    status,
+    created_at,
+    people:person_id (
+      full_name
+    )
+  `)
     .eq("cohort_id", cohortId)
     .order("created_at", { ascending: false });
 
@@ -67,6 +76,19 @@ export default async function AdminCohortDetailPage({
       </main>
     );
   }
+
+  // normaliza para o formato esperado pelo EnrollmentsManager
+  const enrollments: EnrollmentRow[] =
+    (rawEnrollments ?? []).map((row: any) => ({
+      id: row.id,
+      person_id: row.person_id,
+      status: row.status,
+      created_at: row.created_at,
+      people: Array.isArray(row.people)
+        ? row.people[0] ?? null   // se vier array, pega o primeiro
+        : row.people ?? null,     // se já vier objeto ou undefined
+    }));
+
 
   return (
     <main className="p-6 space-y-5">
