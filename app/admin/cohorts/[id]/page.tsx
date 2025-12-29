@@ -35,12 +35,12 @@ export default async function AdminCohortDetailPage({
     .eq("id", cohortId)
     .single();
 
-    // Buscar curso relacionado
-    const { data: course, error: eCourse } = await supabase
-      .from("courses")
-      .select("id, name")
-      .eq("id", cohort?.course_id)
-      .single();
+  // Buscar curso relacionado
+  const { data: course, error: eCourse } = await supabase
+    .from("courses")
+    .select("id, name")
+    .eq("id", cohort?.course_id)
+    .single();
 
   if (eCoh || !cohort) {
     return (
@@ -53,11 +53,27 @@ export default async function AdminCohortDetailPage({
   }
 
   // enrollments (sem join com certifications para não depender do schema cache)
+  // const { data: enrollments, error: eEnr } = await supabase
+  //   .from("enrollments")
+  //   .select("id, person_id, status, created_at, people:person_id(full_name)")
+  //   .eq("cohort_id", cohortId)
+  //   .order("created_at", { ascending: false });
+
   const { data: enrollments, error: eEnr } = await supabase
     .from("enrollments")
-    .select("id, person_id, status, created_at, people:person_id(full_name)")
+    .select(`
+    id,
+    person_id,
+    status,
+    created_at,
+    people:person_id (
+      full_name
+    )
+  `)
     .eq("cohort_id", cohortId)
     .order("created_at", { ascending: false });
+
+
 
   if (eEnr) {
     return (
