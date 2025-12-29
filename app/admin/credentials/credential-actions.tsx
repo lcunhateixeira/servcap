@@ -31,12 +31,28 @@ export default function CredentialActions({ credentialId, status }: Props) {
         disabled={loading}
         className="border rounded px-2 py-1 text-xs"
         onClick={() =>
-          run(() =>
-            supabase.rpc("credential_renew", {
+          run(async () => {
+            // 1) renova no banco
+            const { error } = await supabase.rpc("credential_renew", {
               p_credential_id: credentialId,
               p_note: "Renovação via admin",
-            })
-          )
+            });
+            if (error) return { error };
+
+            // 2) render automático (frente/verso)
+            const res = await fetch(`/api/admin/credentials/${credentialId}/render`, {
+              method: "POST",
+            });
+            const json = await res.json();
+
+            if (!res.ok) {
+              return {
+                error: { message: json?.error ?? "Renovou, mas falhou ao gerar imagem da credencial" },
+              };
+            }
+
+            return { error: null };
+          })
         }
       >
         Renovar (+1 ano)
@@ -47,7 +63,7 @@ export default function CredentialActions({ credentialId, status }: Props) {
           disabled={loading}
           className="border rounded px-2 py-1 text-xs"
           onClick={() =>
-            run(() =>
+            run(async () =>
               supabase.rpc("credential_set_status", {
                 p_credential_id: credentialId,
                 p_status: "suspended",
@@ -65,13 +81,28 @@ export default function CredentialActions({ credentialId, status }: Props) {
           disabled={loading}
           className="border rounded px-2 py-1 text-xs"
           onClick={() =>
-            run(() =>
-              supabase.rpc("credential_set_status", {
+            run(async () => {
+              const { error } = await supabase.rpc("credential_set_status", {
                 p_credential_id: credentialId,
                 p_status: "active",
                 p_note: "Reativada via admin",
-              })
-            )
+              });
+              if (error) return { error };
+
+              // 2) render automático (frente/verso)
+              const res = await fetch(`/api/admin/credentials/${credentialId}/render`, {
+                method: "POST",
+              });
+              const json = await res.json();
+
+              if (!res.ok) {
+                return {
+                  error: { message: json?.error ?? "Renovou, mas falhou ao gerar imagem da credencial" },
+                };
+              }
+
+              return { error: null };
+            })
           }
         >
           Reativar
@@ -85,13 +116,28 @@ export default function CredentialActions({ credentialId, status }: Props) {
           onClick={() => {
             const ok = confirm("Tem certeza que deseja revogar esta credencial?");
             if (!ok) return;
-            run(() =>
-              supabase.rpc("credential_set_status", {
+            run(async () => {
+              const { error } = await supabase.rpc("credential_set_status", {
                 p_credential_id: credentialId,
                 p_status: "revoked",
                 p_note: "Revogada via admin",
-              })
-            );
+              });
+              if (error) return { error };
+
+              // 2) render automático (frente/verso)
+              const res = await fetch(`/api/admin/credentials/${credentialId}/render`, {
+                method: "POST",
+              });
+              const json = await res.json();
+
+              if (!res.ok) {
+                return {
+                  error: { message: json?.error ?? "Renovou, mas falhou ao gerar imagem da credencial" },
+                };
+              }
+
+              return { error: null };
+            })
           }}
         >
           Revogar
