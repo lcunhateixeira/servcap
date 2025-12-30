@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import LogoutButton from "./logout-button";
 
 const links = [
   { href: "/admin", label: "Visão geral" },
@@ -30,9 +31,10 @@ export default function AdminNav() {
             }`}
           >
             {l.label}
-          </Link>
+          </Link>          
         );
       })}
+      <LogoutButton />
     </nav>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AdminNav from "./admin-nav";
+import LogoutButton from "./logout-button";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -23,9 +24,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           />
         )}
         <aside
-          className={`fixed top-0 left-0 h-full w-72 bg-white border-r z-50 transform transition-transform ${
-            open ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`fixed top-0 left-0 h-full w-72 bg-white border-r z-50 transform transition-transform ${open ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="p-4 flex items-center justify-between border-b">
             <span className="font-bold">ServCap • Admin</span>
