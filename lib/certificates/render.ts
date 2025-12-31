@@ -65,12 +65,27 @@ export async function renderCertificateFiles(certId: string) {
   const H = meta.height ?? 1000;
 
   // 6.1) Carregar fontes para usar no SVG (para funcionar na Vercel)
-  const nameFontPath = path.join(
-    process.cwd(),
-    "public",
-    "fonts",
-    "GreatVibes-Regular.ttf"
-  );
+  // const nameFontPath = path.join(
+  //   process.cwd(),
+  //   "public",
+  //   "fonts",
+  //   "GreatVibes-Regular.ttf"
+  // );
+  // const bodyFontPath = path.join(
+  //   process.cwd(),
+  //   "public",
+  //   "fonts",
+  //   "Roboto-Regular.ttf"
+  // );
+
+  // const [nameFontBuffer, bodyFontBuffer] = await Promise.all([
+  //   fs.readFile(nameFontPath),
+  //   fs.readFile(bodyFontPath),
+  // ]);
+
+  // const nameFontBase64 = nameFontBuffer.toString("base64");
+  // const bodyFontBase64 = bodyFontBuffer.toString("base64");
+
   const bodyFontPath = path.join(
     process.cwd(),
     "public",
@@ -78,13 +93,9 @@ export async function renderCertificateFiles(certId: string) {
     "Roboto-Regular.ttf"
   );
 
-  const [nameFontBuffer, bodyFontBuffer] = await Promise.all([
-    fs.readFile(nameFontPath),
-    fs.readFile(bodyFontPath),
-  ]);
-
-  const nameFontBase64 = nameFontBuffer.toString("base64");
+  const bodyFontBuffer = await fs.readFile(bodyFontPath);
   const bodyFontBase64 = bodyFontBuffer.toString("base64");
+
 
 
   // 7) campos do certificado
@@ -109,7 +120,7 @@ export async function renderCertificateFiles(certId: string) {
     y: baseY,
   });
 
-  console.log("Tamanho do nome:", nome.length)
+  // Nome (ajustar Y se for muito longo)
   let vertNome = 0.50;
   if (nome.length > 38) {
     vertNome = 0.48;
@@ -123,8 +134,44 @@ export async function renderCertificateFiles(certId: string) {
     x: baseX,
     y: baseY,
   });
-
+  
   // 8) overlay SVG (ajustaremos a posição finamente depois)
+  // const overlaySvg = `
+  // <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  //   <defs>
+  //     <style type="text/css">
+  //       @font-face {
+  //         font-family: 'CertName';
+  //         src: url('data:font/ttf;base64,${nameFontBase64}') format('truetype');
+  //       }
+  //       @font-face {
+  //         font-family: 'CertBody';
+  //         src: url('data:font/ttf;base64,${bodyFontBase64}') format('truetype');
+  //       }
+  //     </style>
+  //   </defs>
+
+  //   <!-- Nome -->
+  //   <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.50)}"
+  //     font-family="CertName" font-size="${Math.round(H * 0.050)}"
+  //     fill="#111" font-style="italic">${nomeSvg}</text>
+
+  //   <!-- Texto principal -->
+  //   <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.56)}"
+  //     font-family="CertBody" font-size="${Math.round(H * 0.020)}" fill="#111">
+  //     ${textoSvg}
+  //   </text>
+
+  //   <!-- Data de emissão -->
+  //   <text x="${Math.round(W * 0.56)}" y="${Math.round(H * 0.15)}"
+  //     font-family="CertBody" font-size="${Math.round(H * 0.015)}" fill="#555">
+  //     Emitido em: ${issuedAt}
+  //   </text>
+
+  //   <!-- QR -->
+  //   <image href="${qrDataUrl}" x="${Math.round(W * 0.58)}" y="${Math.round(H * 0.015)}"
+  //     width="${Math.round(W * 0.08)}" height="${Math.round(W * 0.08)}" />
+  // </svg>`;
   const overlaySvg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <defs>
