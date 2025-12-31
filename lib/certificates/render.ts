@@ -159,8 +159,6 @@ export async function renderCertificateFiles(certId: string) {
             text: "Nome teste 99999",
             font: "Roboto",
             rgba: true,
-            background: { r: 0, g: 0, b: 0, alpha: 0 }, // 👈 deixa transparente
-            color: "#000000",
             fontfile: bodyFontPath,
             width: Math.round(W * 0.6),
             height: Math.round(H * 0.08),
@@ -180,8 +178,6 @@ export async function renderCertificateFiles(certId: string) {
             font: "Roboto",
             fontfile: bodyFontPath,
             rgba: true,
-            background: { r: 0, g: 0, b: 0, alpha: 0 }, // 👈 deixa transparente
-            color: "#000000",
             width: Math.round(W * 0.6),
             height: Math.round(H * 0.18),
             wrap: "word",
@@ -200,8 +196,6 @@ export async function renderCertificateFiles(certId: string) {
             font: "Roboto",
             fontfile: bodyFontPath,
             rgba: true,
-            background: { r: 0, g: 0, b: 0, alpha: 0 }, // 👈 deixa transparente
-            color: "#000000",
             width: Math.round(W * 0.25),
             height: Math.round(H * 0.03),
             wrap: "word",
