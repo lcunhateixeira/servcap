@@ -58,10 +58,7 @@ export async function renderCertificateFiles(certId: string) {
   const qrDataUrl = await QRCode.toDataURL(publicUrl, { margin: 1, width: 260 });
 
   // 6) template base (PNG)
-  const templatePath = path.join(process.cwd(), "public", "templates", "certificado-base.png");
-  const templateBuffer = await fs.readFile(templatePath);
-
-  const meta = await sharp(templateBuffer).metadata(); const templatePath = path.join(process.cwd(), "public", "templates", "certificado-base.png");
+   const templatePath = path.join(process.cwd(), "public", "templates", "certificado-base.png");
   const templateBuffer = await fs.readFile(templatePath);
 
   const meta = await sharp(templateBuffer).metadata();
@@ -90,6 +87,7 @@ export async function renderCertificateFiles(certId: string) {
   // buffer do QR (a partir do data URL)
   const qrBase64 = qrDataUrl.split(",")[1];
   const qrBuffer = Buffer.from(qrBase64, "base64");
+
 
 
   let baseX = Math.round(W * 0.33);
