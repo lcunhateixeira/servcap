@@ -6,7 +6,6 @@ import { PDFDocument } from "pdf-lib";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDateBR } from "@/lib/formatters/date";
 import { wrapSvgText } from "../svg/wrapText";
-import { Resvg } from "@resvg/resvg-js";
 
 function escapeXml(s: string) {
   return (s ?? "")
@@ -173,7 +172,7 @@ export async function renderCertificateFiles(certId: string) {
   //   <image href="${qrDataUrl}" x="${Math.round(W * 0.58)}" y="${Math.round(H * 0.015)}"
   //     width="${Math.round(W * 0.08)}" height="${Math.round(W * 0.08)}" />
   // </svg>`;
-  const overlaySvg = `
+   const overlaySvg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <defs>
       <style type="text/css">
@@ -229,15 +228,8 @@ export async function renderCertificateFiles(certId: string) {
 
 
   // 9) compor PNG final
-  // renderiza o SVG em PNG com fontes funcionando
-  const resvg = new Resvg(overlaySvg, {
-    fitTo: { mode: "width", value: W },
-  });
-  const overlayPng = resvg.render().asPng();
-
-  // agora sim compõe com o template
   const pngBuffer = await sharp(templateBuffer)
-    .composite([{ input: overlayPng, top: 0, left: 0 }])
+    .composite([{ input: Buffer.from(overlaySvg), top: 0, left: 0 }])
     .png()
     .toBuffer();
 
