@@ -134,7 +134,7 @@ export async function renderCertificateFiles(certId: string) {
     x: baseX,
     y: baseY,
   });
-  
+
   // 8) overlay SVG (ajustaremos a posição finamente depois)
   // const overlaySvg = `
   // <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
@@ -177,30 +177,47 @@ export async function renderCertificateFiles(certId: string) {
     <defs>
       <style type="text/css">
         @font-face {
-          font-family: 'CertName';
-          src: url('data:font/ttf;base64,${nameFontBase64}') format('truetype');
-        }
-        @font-face {
           font-family: 'CertBody';
           src: url('data:font/ttf;base64,${bodyFontBase64}') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+        }
+
+        .cert-name {
+          font-family: 'CertBody';
+          font-size: ${Math.round(H * 0.050)}px;
+          fill: #111111;
+        }
+
+        .cert-text {
+          font-family: 'CertBody';
+          font-size: ${Math.round(H * 0.020)}px;
+          fill: #111111;
+        }
+
+        .cert-meta {
+          font-family: 'CertBody';
+          font-size: ${Math.round(H * 0.015)}px;
+          fill: #555555;
         }
       </style>
     </defs>
 
     <!-- Nome -->
     <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.50)}"
-      font-family="CertName" font-size="${Math.round(H * 0.050)}"
-      fill="#111" font-style="italic">${nomeSvg}</text>
+      class="cert-name">
+      ${nomeSvg}
+    </text>
 
     <!-- Texto principal -->
     <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.56)}"
-      font-family="CertBody" font-size="${Math.round(H * 0.020)}" fill="#111">
+      class="cert-text">
       ${textoSvg}
     </text>
 
     <!-- Data de emissão -->
     <text x="${Math.round(W * 0.56)}" y="${Math.round(H * 0.15)}"
-      font-family="CertBody" font-size="${Math.round(H * 0.015)}" fill="#555">
+      class="cert-meta">
       Emitido em: ${issuedAt}
     </text>
 
@@ -208,6 +225,7 @@ export async function renderCertificateFiles(certId: string) {
     <image href="${qrDataUrl}" x="${Math.round(W * 0.58)}" y="${Math.round(H * 0.015)}"
       width="${Math.round(W * 0.08)}" height="${Math.round(W * 0.08)}" />
   </svg>`;
+
 
   // 9) compor PNG final
   const pngBuffer = await sharp(templateBuffer)
