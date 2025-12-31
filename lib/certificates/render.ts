@@ -49,11 +49,6 @@ export async function renderCertificateFiles(certId: string) {
   const { data: course } = await admin.from("courses").select("name").eq("id", cert.course_id).single();
   if (course?.name) courseName = course.name;
 
-  // (Opcional) nome da turma/cohort (se você quiser exibir)
-  // let cohortName = "";
-  // const { data: cohort } = await admin.from("cohorts").select("name").eq("id", cert.cohort_id).single();
-  // if (cohort?.name) cohortName = cohort.name;
-
   // 5) URL pública
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (!appUrl) throw new Error("NEXT_PUBLIC_APP_URL não configurado");
@@ -68,7 +63,29 @@ export async function renderCertificateFiles(certId: string) {
   const meta = await sharp(templateBuffer).metadata();
   const W = meta.width ?? 1700;
   const H = meta.height ?? 1000;
-  console.log(`Template dimensions: ${W}x${H}`);
+
+  // 6.1) Carregar fontes para usar no SVG (para funcionar na Vercel)
+  const nameFontPath = path.join(
+    process.cwd(),
+    "public",
+    "fonts",
+    "GreatVibes-Regular.ttf"
+  );
+  const bodyFontPath = path.join(
+    process.cwd(),
+    "public",
+    "fonts",
+    "Roboto-Regular"
+  );
+
+  const [nameFontBuffer, bodyFontBuffer] = await Promise.all([
+    fs.readFile(nameFontPath),
+    fs.readFile(bodyFontPath),
+  ]);
+
+  const nameFontBase64 = nameFontBuffer.toString("base64");
+  const bodyFontBase64 = bodyFontBuffer.toString("base64");
+
 
   // 7) campos do certificado
   const nome = escapeXml(person.full_name ?? "");
@@ -83,9 +100,19 @@ export async function renderCertificateFiles(certId: string) {
   const textoPrincipal = `Certificamos que participou do curso ${curso}, realizado em ${cityUf},
   nos dias ${datas}. Os assuntos abordados foram: ${topics}.Carga horária: ${hours} horas.`.trim();
 
-  const baseX = Math.round(W * 0.33);
-  const baseY = Math.round(H * 0.56);
+  let baseX = Math.round(W * 0.33);
+  let baseY = Math.round(H * 0.56);
   const textoSvg = wrapSvgText(textoPrincipal, {
+    maxCharsPerLine: 68,
+    lineHeight: Math.round(H * 0.038),
+    x: baseX,
+    y: baseY,
+  });
+
+  baseX = Math.round(W * 0.33);
+  baseY = Math.round(H * 0.50);
+
+  const nomeSvg = wrapSvgText(nome, {
     maxCharsPerLine: 68,
     lineHeight: Math.round(H * 0.038),
     x: baseX,
@@ -95,20 +122,33 @@ export async function renderCertificateFiles(certId: string) {
   // 8) overlay SVG (ajustaremos a posição finamente depois)
   const overlaySvg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+    <defs>
+      <style type="text/css">
+        @font-face {
+          font-family: 'CertName';
+          src: url('data:font/ttf;base64,${nameFontBase64}') format('truetype');
+        }
+        @font-face {
+          font-family: 'CertBody';
+          src: url('data:font/ttf;base64,${bodyFontBase64}') format('truetype');
+        }
+      </style>
+    </defs>
+
     <!-- Nome -->
-    <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.50)}"
-      font-family="Georgia" font-size="${Math.round(H * 0.065)}"
-      fill="#111" font-style="italic">${nome}</text>
+    <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.55)}"
+      font-family="CertName" font-size="${Math.round(H * 0.065)}"
+      fill="#111" font-style="italic">${nomeSvg}</text>
 
     <!-- Texto principal -->
     <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.56)}"
-      font-family="Arial" font-size="${Math.round(H * 0.028)}" fill="#111">
+      font-family="CertBody" font-size="${Math.round(H * 0.028)}" fill="#111">
       ${textoSvg}
     </text>
 
     <!-- Data de emissão -->
     <text x="${Math.round(W * 0.56)}" y="${Math.round(H * 0.15)}"
-      font-family="Arial" font-size="${Math.round(H * 0.015)}" fill="#555">
+      font-family="CertBody" font-size="${Math.round(H * 0.015)}" fill="#555">
       Emitido em: ${issuedAt}
     </text>
 
