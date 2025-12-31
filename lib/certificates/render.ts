@@ -88,8 +88,6 @@ export async function renderCertificateFiles(certId: string) {
   const qrBase64 = qrDataUrl.split(",")[1];
   const qrBuffer = Buffer.from(qrBase64, "base64");
 
-
-
   let baseX = Math.round(W * 0.33);
   let baseY = Math.round(H * 0.58);
   const textoSvg = wrapSvgText(textoPrincipal, {
@@ -158,7 +156,7 @@ export async function renderCertificateFiles(certId: string) {
       {
         input: {
           text: {
-            text: nome,
+            text: "Nome teste 99999",
             font: "Roboto",
             fontfile: bodyFontPath,
             width: Math.round(W * 0.6),
