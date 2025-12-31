@@ -75,7 +75,7 @@ export async function renderCertificateFiles(certId: string) {
     process.cwd(),
     "public",
     "fonts",
-    "Roboto-Regular"
+    "Roboto-Regular.ttf"
   );
 
   const [nameFontBuffer, bodyFontBuffer] = await Promise.all([
@@ -101,7 +101,7 @@ export async function renderCertificateFiles(certId: string) {
   nos dias ${datas}. Os assuntos abordados foram: ${topics}.Carga horária: ${hours} horas.`.trim();
 
   let baseX = Math.round(W * 0.33);
-  let baseY = Math.round(H * 0.56);
+  let baseY = Math.round(H * 0.58);
   const textoSvg = wrapSvgText(textoPrincipal, {
     maxCharsPerLine: 68,
     lineHeight: Math.round(H * 0.038),
@@ -109,11 +109,16 @@ export async function renderCertificateFiles(certId: string) {
     y: baseY,
   });
 
+  console.log("Tamanho do nome:", nome.length)
+  let vertNome = 0.50;
+  if (nome.length > 38) {
+    vertNome = 0.48;
+  }
   baseX = Math.round(W * 0.33);
-  baseY = Math.round(H * 0.50);
+  baseY = Math.round(H * vertNome);
 
   const nomeSvg = wrapSvgText(nome, {
-    maxCharsPerLine: 68,
+    maxCharsPerLine: 40,
     lineHeight: Math.round(H * 0.038),
     x: baseX,
     y: baseY,
@@ -136,13 +141,13 @@ export async function renderCertificateFiles(certId: string) {
     </defs>
 
     <!-- Nome -->
-    <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.55)}"
-      font-family="CertName" font-size="${Math.round(H * 0.065)}"
+    <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.50)}"
+      font-family="CertName" font-size="${Math.round(H * 0.050)}"
       fill="#111" font-style="italic">${nomeSvg}</text>
 
     <!-- Texto principal -->
     <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.56)}"
-      font-family="CertBody" font-size="${Math.round(H * 0.028)}" fill="#111">
+      font-family="CertBody" font-size="${Math.round(H * 0.020)}" fill="#111">
       ${textoSvg}
     </text>
 

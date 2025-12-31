@@ -25,11 +25,11 @@ export async function POST(
   }
 
   const admin = createAdminClient();
-
+  console.log("Iniciando renderização de certificados para turma:", cohortId);
   // 1) turma -> course_id
   const { data: cohort, error: eCoh } = await admin
     .from("cohorts")
-    .select("id, course_id")
+    .select("id, course_id, city, state, dates_text")
     .eq("id", cohortId)
     .single();
 
@@ -50,12 +50,27 @@ export async function POST(
     return NextResponse.json({ ok: true, total: 0, generated: 0, failed: [] });
   }
 
+  //Load course data
+  const { data: course, error: eCourse } = await admin
+    .from("courses")
+    .select("id, name, description, hours, topics")
+    .eq("id", cohort.course_id)
+    .single();
+  if (eCourse || !course) {
+    return NextResponse.json({ error: eCourse?.message ?? "Curso não encontrado" }, { status: 404 });
+  }
+
   // 3) upsert certifications (1 por pessoa na turma)
   const nowIso = new Date().toISOString();
   const toUpsert = enrollments.map((enr) => ({
     person_id: enr.person_id,
     cohort_id: cohortId,
     course_id: cohort.course_id,
+    hours: course.hours,
+    topics: course.topics,
+    city: cohort.city,
+    state: cohort.state,
+    dates_text: cohort.dates_text,
     issued_at: nowIso,
   }));
 
