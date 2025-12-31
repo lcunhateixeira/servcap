@@ -89,13 +89,17 @@ export async function renderCertificateFiles(certId: string) {
   const qrBuffer = Buffer.from(qrBase64, "base64");
 
   // Nome (ajustar Y se for muito longo)
-  let vertNome = 0.48;
-  let vertTexto = 0.58;
-  if (nome.length > 30) {
+  let vertNome = 0.46;
+  let vertTexto = 0.56;
+  if (nome.length > 40) {
     vertNome = 0.46;
-    vertTexto = 0.60;
+    vertTexto = 0.58;
   }
- 
+
+  const nameBoxWidth = Math.round(W * 0.6);         // bem largo
+  const nameBoxHeight = Math.round(H * 0.06);       // controla o "font size"
+  const nameBoxLeft = Math.round(W * 0.33) // centraliza o box
+
 
   // 9) gerar PNG com Sharp
   const pngBuffer = await sharp(templateBuffer)
@@ -106,15 +110,15 @@ export async function renderCertificateFiles(certId: string) {
           text: {
             text: nome,
             font: "Roboto",
-            rgba: true,
             fontfile: bodyFontPath,
-            width: Math.round(W * 0.6),
-            height: Math.round(H * 0.10),
+            rgba: true,
+            width: nameBoxWidth,
+            height: nameBoxHeight,
             wrap: "word",
             align: "center",
           },
         },
-        left: Math.round(W * 0.33),
+        left: nameBoxLeft,
         top: Math.round(H * vertNome),
       },
 
@@ -132,7 +136,7 @@ export async function renderCertificateFiles(certId: string) {
             align: "left",
           },
         },
-        left: Math.round(W * 0.33),
+        left: nameBoxLeft,
         top: Math.round(H * vertTexto),
       },
 
