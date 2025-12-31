@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDateBR } from "@/lib/formatters/date";
 import { wrapSvgText } from "../svg/wrapText";
 
+
 function escapeXml(s: string) {
   return (s ?? "")
     .replace(/&/g, "&amp;")
@@ -49,17 +50,12 @@ export async function renderCertificateFiles(certId: string) {
   const { data: course } = await admin.from("courses").select("name").eq("id", cert.course_id).single();
   if (course?.name) courseName = course.name;
 
-  // (Opcional) nome da turma/cohort (se você quiser exibir)
-  // let cohortName = "";
-  // const { data: cohort } = await admin.from("cohorts").select("name").eq("id", cert.cohort_id).single();
-  // if (cohort?.name) cohortName = cohort.name;
-
   // 5) URL pública
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (!appUrl) throw new Error("NEXT_PUBLIC_APP_URL não configurado");
 
   const publicUrl = `${appUrl}/certificado/${publicToken}`;
-  const qrDataUrl = await QRCode.toDataURL(publicUrl, { margin: 1, width: 260 });
+  const qrDataUrl = await QRCode.toDataURL(publicUrl, { margin: 1, width: 150 });
 
   // 6) template base (PNG)
   const templatePath = path.join(process.cwd(), "public", "templates", "certificado-base.png");
@@ -68,60 +64,110 @@ export async function renderCertificateFiles(certId: string) {
   const meta = await sharp(templateBuffer).metadata();
   const W = meta.width ?? 1700;
   const H = meta.height ?? 1000;
-  console.log(`Template dimensions: ${W}x${H}`);
+
+  // fonte Roboto
+  const bodyFontPath = path.join(
+    process.cwd(),
+    "public",
+    "fonts",
+    "Roboto-Regular.ttf"
+  );
 
   // 7) campos do certificado
-  const nome = escapeXml(person.full_name ?? "");
-  const curso = escapeXml(courseName);
-  const datas = escapeXml(cert.dates_text ?? "");
-  const topics = escapeXml(cert.topics ?? "");
-  const hours = escapeXml(cert.hours ?? "");
-  const cityUf = escapeXml(`${cert.city ?? "Capivari de Baixo"}-${cert.state ?? "SC"}`);
-  const issuedAt = escapeXml(formatDateBR(cert.issued_at ?? null));
+  const nome = person.full_name ?? "";
+  const curso = courseName;
+  const datas = cert.dates_text ?? "";
+  const topics = cert.topics ?? "";
+  const hours = cert.hours ?? "";
+  const cityUf = `${cert.city ?? "Capivari de Baixo"}-${cert.state ?? "SC"}`;
+  const issuedAt = formatDateBR(cert.issued_at ?? null);
+
+  const textoPrincipal = `Certificamos que participou do curso ${curso}, realizado em ${cityUf}, nos dias ${datas}. Os assuntos abordados foram: ${topics}. Carga horária: ${hours} horas.`;
+
+  // buffer do QR (a partir do data URL)
+  const qrBase64 = qrDataUrl.split(",")[1];
+  const qrBuffer = Buffer.from(qrBase64, "base64");
+
+  // Nome (ajustar Y se for muito longo)
+  let vertNome = 0.46;
+  let vertTexto = 0.56;
+  if (nome.length > 40) {
+    vertNome = 0.46;
+    vertTexto = 0.58;
+  }
+
+  const nameBoxWidth = Math.round(W * 0.6);         // bem largo
+  const nameBoxHeight = Math.round(H * 0.06);       // controla o "font size"
+  const nameBoxLeft = Math.round(W * 0.33) // centraliza o box
 
 
-  const textoPrincipal = `Certificamos que participou do curso ${curso}, realizado em ${cityUf},
-  nos dias ${datas}. Os assuntos abordados foram: ${topics}.Carga horária: ${hours} horas.`.trim();
-
-  const baseX = Math.round(W * 0.33);
-  const baseY = Math.round(H * 0.56);
-  const textoSvg = wrapSvgText(textoPrincipal, {
-    maxCharsPerLine: 68,
-    lineHeight: Math.round(H * 0.038),
-    x: baseX,
-    y: baseY,
-  });
-
-  // 8) overlay SVG (ajustaremos a posição finamente depois)
-  const overlaySvg = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-    <!-- Nome -->
-    <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.50)}"
-      font-family="Georgia" font-size="${Math.round(H * 0.065)}"
-      fill="#111" font-style="italic">${nome}</text>
-
-    <!-- Texto principal -->
-    <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.56)}"
-      font-family="Arial" font-size="${Math.round(H * 0.028)}" fill="#111">
-      ${textoSvg}
-    </text>
-
-    <!-- Data de emissão -->
-    <text x="${Math.round(W * 0.56)}" y="${Math.round(H * 0.15)}"
-      font-family="Arial" font-size="${Math.round(H * 0.015)}" fill="#555">
-      Emitido em: ${issuedAt}
-    </text>
-
-    <!-- QR -->
-    <image href="${qrDataUrl}" x="${Math.round(W * 0.58)}" y="${Math.round(H * 0.015)}"
-      width="${Math.round(W * 0.08)}" height="${Math.round(W * 0.08)}" />
-  </svg>`;
-
-  // 9) compor PNG final
+  // 9) gerar PNG com Sharp
   const pngBuffer = await sharp(templateBuffer)
-    .composite([{ input: Buffer.from(overlaySvg), top: 0, left: 0 }])
+    .composite([
+      // Nome do aluno
+      {
+        input: {
+          text: {
+            text: nome,
+            font: "Roboto",
+            fontfile: bodyFontPath,
+            rgba: true,
+            width: nameBoxWidth,
+            height: nameBoxHeight,
+            wrap: "word",
+            align: "center",
+          },
+        },
+        left: nameBoxLeft,
+        top: Math.round(H * vertNome),
+      },
+
+      // Texto principal
+      {
+        input: {
+          text: {
+            text: textoPrincipal,
+            font: "Roboto",
+            fontfile: bodyFontPath,
+            rgba: true,
+            width: Math.round(W * 0.6),
+            height: Math.round(H * 0.15),
+            wrap: "word",
+            align: "left",
+          },
+        },
+        left: nameBoxLeft,
+        top: Math.round(H * vertTexto),
+      },
+
+      // Data de emissão
+      {
+        input: {
+          text: {
+            text: `Emitido em: ${issuedAt}`,
+            font: "Roboto",
+            fontfile: bodyFontPath,
+            rgba: true,
+            width: Math.round(W * 0.12),
+            height: Math.round(H * 0.02),
+            wrap: "word",
+            align: "left",
+          },
+        },
+        left: Math.round(W * 0.556),
+        top: Math.round(H * 0.13),
+      },
+
+      // QR Code
+      {
+        input: qrBuffer,
+        left: Math.round(W * 0.58),
+        top: Math.round(H * 0.015),
+      },
+    ])
     .png()
     .toBuffer();
+
 
   // 10) PDF a partir do PNG (pdf-lib)
   const pdfDoc = await PDFDocument.create();

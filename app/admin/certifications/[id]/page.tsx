@@ -61,7 +61,7 @@ export default async function AdminCertificationDetailPage({
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Certificado</h1>
-          <p className="text-sm opacity-70">Pessoa: <strong>{person?.full_name ?? "-"}</strong></p>
+          <p className="text-sm opacity-70">V1 Pessoa: <strong>{person?.full_name ?? "-"}</strong></p>
           <p className="text-sm opacity-70">Curso: <strong>{course?.name ?? "-"}</strong></p>
         </div>
 

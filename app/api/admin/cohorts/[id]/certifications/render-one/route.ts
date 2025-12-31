@@ -47,21 +47,32 @@ export async function POST(
     return NextResponse.json({ error: "Somente status 'concluído' pode gerar certificado" }, { status: 400 });
   }
 
+  console.log("Iniciando renderização de certificado para pessoa:", personId, "na turma:", cohortId);
   // Pega course_id da turma
   const { data: cohort, error: eCoh } = await admin
     .from("cohorts")
-    .select("id, course_id")
+    .select("id, course_id, city, state, dates")
     .eq("id", cohortId)
     .single();
 
+  console.log(cohort);
   if (eCoh || !cohort) return NextResponse.json({ error: "Turma não encontrada" }, { status: 404 });
+
+  //Load course data
+  const { data: course, error: eCourse } = await admin
+    .from("courses")
+    .select("*")
+    .eq("id", cohort.course_id)
+    .single();
+
+  if (eCourse || !course) return NextResponse.json({ error: "Curso não encontrado" }, { status: 404 });
 
   // Upsert do certificado (1 por pessoa+turma)
   const nowIso = new Date().toISOString();
   const { data: cert, error: eUp } = await admin
     .from("certifications")
     .upsert(
-      [{ person_id: personId, cohort_id: cohortId, course_id: cohort.course_id, issued_at: nowIso }],
+      [{ person_id: personId, cohort_id: cohortId, course_id: cohort.course_id, issued_at: nowIso, hours: course.hours, topics: course.topics , city: cohort.city, state: cohort.state , dates_text: cohort.dates}],
       { onConflict: "person_id,cohort_id" }
     )
     .select("id")

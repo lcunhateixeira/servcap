@@ -94,7 +94,7 @@ export default async function AdminCohortDetailPage({
     <main className="p-6 space-y-5">
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold">Turma</h1>
+          <h1 className="text-2xl font-bold">Turma - v1</h1>
           <p className="text-sm opacity-70">
             Curso: <strong>{course?.name ?? "-"}</strong>
           </p>
