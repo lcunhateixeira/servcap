@@ -55,7 +55,7 @@ export async function renderCertificateFiles(certId: string) {
   if (!appUrl) throw new Error("NEXT_PUBLIC_APP_URL não configurado");
 
   const publicUrl = `${appUrl}/certificado/${publicToken}`;
-  const qrDataUrl = await QRCode.toDataURL(publicUrl, { margin: 1, width: 260 });
+  const qrDataUrl = await QRCode.toDataURL(publicUrl, { margin: 1, width: 150 });
 
   // 6) template base (PNG)
   const templatePath = path.join(process.cwd(), "public", "templates", "certificado-base.png");
@@ -88,86 +88,34 @@ export async function renderCertificateFiles(certId: string) {
   const qrBase64 = qrDataUrl.split(",")[1];
   const qrBuffer = Buffer.from(qrBase64, "base64");
 
-  let baseX = Math.round(W * 0.33);
-  let baseY = Math.round(H * 0.58);
-  const textoSvg = wrapSvgText(textoPrincipal, {
-    maxCharsPerLine: 68,
-    lineHeight: Math.round(H * 0.038),
-    x: baseX,
-    y: baseY,
-  });
-
   // Nome (ajustar Y se for muito longo)
-  let vertNome = 0.50;
-  if (nome.length > 38) {
-    vertNome = 0.48;
+  let vertNome = 0.48;
+  let vertTexto = 0.58;
+  if (nome.length > 30) {
+    vertNome = 0.46;
+    vertTexto = 0.60;
   }
-  baseX = Math.round(W * 0.33);
-  baseY = Math.round(H * vertNome);
+ 
 
-  const nomeSvg = wrapSvgText(nome, {
-    maxCharsPerLine: 40,
-    lineHeight: Math.round(H * 0.038),
-    x: baseX,
-    y: baseY,
-  });
-
-  // 8) overlay SVG (ajustaremos a posição finamente depois)
-  // const overlaySvg = `
-  // <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-  //   <defs>
-  //     <style type="text/css">
-  //       @font-face {
-  //         font-family: 'CertName';
-  //         src: url('data:font/ttf;base64,${nameFontBase64}') format('truetype');
-  //       }
-  //       @font-face {
-  //         font-family: 'CertBody';
-  //         src: url('data:font/ttf;base64,${bodyFontBase64}') format('truetype');
-  //       }
-  //     </style>
-  //   </defs>
-
-  //   <!-- Nome -->
-  //   <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.50)}"
-  //     font-family="CertName" font-size="${Math.round(H * 0.050)}"
-  //     fill="#111" font-style="italic">${nomeSvg}</text>
-
-  //   <!-- Texto principal -->
-  //   <text x="${Math.round(W * 0.33)}" y="${Math.round(H * 0.56)}"
-  //     font-family="CertBody" font-size="${Math.round(H * 0.020)}" fill="#111">
-  //     ${textoSvg}
-  //   </text>
-
-  //   <!-- Data de emissão -->
-  //   <text x="${Math.round(W * 0.56)}" y="${Math.round(H * 0.15)}"
-  //     font-family="CertBody" font-size="${Math.round(H * 0.015)}" fill="#555">
-  //     Emitido em: ${issuedAt}
-  //   </text>
-
-  //   <!-- QR -->
-  //   <image href="${qrDataUrl}" x="${Math.round(W * 0.58)}" y="${Math.round(H * 0.015)}"
-  //     width="${Math.round(W * 0.08)}" height="${Math.round(W * 0.08)}" />
-  // </svg>`;
-  // 8) compor PNG final usando texto nativo do sharp
+  // 9) gerar PNG com Sharp
   const pngBuffer = await sharp(templateBuffer)
     .composite([
       // Nome do aluno
       {
         input: {
           text: {
-            text: "Nome teste 99999",
+            text: nome,
             font: "Roboto",
             rgba: true,
             fontfile: bodyFontPath,
             width: Math.round(W * 0.6),
-            height: Math.round(H * 0.08),
+            height: Math.round(H * 0.10),
             wrap: "word",
             align: "center",
           },
         },
-        left: Math.round(W * 0.20),
-        top: Math.round(H * 0.46),
+        left: Math.round(W * 0.33),
+        top: Math.round(H * vertNome),
       },
 
       // Texto principal
@@ -179,13 +127,13 @@ export async function renderCertificateFiles(certId: string) {
             fontfile: bodyFontPath,
             rgba: true,
             width: Math.round(W * 0.6),
-            height: Math.round(H * 0.18),
+            height: Math.round(H * 0.15),
             wrap: "word",
             align: "left",
           },
         },
-        left: Math.round(W * 0.20),
-        top: Math.round(H * 0.54),
+        left: Math.round(W * 0.33),
+        top: Math.round(H * vertTexto),
       },
 
       // Data de emissão
@@ -196,14 +144,14 @@ export async function renderCertificateFiles(certId: string) {
             font: "Roboto",
             fontfile: bodyFontPath,
             rgba: true,
-            width: Math.round(W * 0.25),
-            height: Math.round(H * 0.03),
+            width: Math.round(W * 0.12),
+            height: Math.round(H * 0.02),
             wrap: "word",
             align: "left",
           },
         },
-        left: Math.round(W * 0.56),
-        top: Math.round(H * 0.12),
+        left: Math.round(W * 0.556),
+        top: Math.round(H * 0.13),
       },
 
       // QR Code
